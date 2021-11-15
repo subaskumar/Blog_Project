@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <script src="https://use.fontawesome.com/a0841d2051.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+    <link rel="stylesheet" href="{% static 'css/index.css' %}">
+    <title>{% block title %} {% endblock %}</title>
+        {% if user.is_authenticated %}
+            {% for like in post.likes.all %}
+                {% if like == request.user %}
+                <style>
+                    #color_like{
+                        color: #0d6efd;
+                    }
+                </style>
+                {% endif %}
+            {% endfor %}
+            {% for dislike in post.dislikes.all %}
+                {% if dislike == request.user %}
+                <style>
+                    #color_dislike{
+                        color: red;
+                    }
+                </style>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+
+</head>
+<body >
+
+    {% load most_comment %}
+    <!-- for NavBar -->
+
+    <!-- Include the above in your HEAD tag ---------->
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top" id="banner" >
+        <div class="container-fluid" >
+            <!-- Brand -->
+            <div class="mybrand" style="width: 20%;">
+                <a class="navbar-brand" href="/home"><span>Infinity</span> Blog</a>
+            </div>
+
+            <!-- Toggler/collapsibe Button -->
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="search-icon " style="width:60%; ">
+                <form action="{% url 'searched' %}" method="GET" style="width: 100%;" class="form-inline" novalidate>
+                  {% csrf_token %}
+                    <input type="search" class="search-data" placeholder="Search" name="searched" required >
+                    <button type="submit" class=""><i class="fa fa-search" style="color: #0078D4; font-size: 22px; -webkit-text-stroke: 1px white;"></i></button>
+                  </form>
+            </div>
+
+            <!-- Navbar links -->
+            <div class="collapse navbar-collapse navBar-link" id="collapsibleNavbar" style="width: 20%;">
+                <ul class="navbar-nav ">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fa fa-bell"></i></a>
+                        </li>
+
+
+                        <!-- Dropdown -->
+                        <li class="nav-item w3-dropdown-hover">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+                                <img  src="{{user.profile.profile_pic.url}}" alt="user">
+                            </a>
+                            <div class=" w3-dropdown-content dropdown_div " style="padding-top: 10px; padding-bottom: 10px;">
+                                <a class="dropdown-item" href="{% url 'myProfile' user.id %}" class="w3-button " >Profile</a>
+                                <a class="dropdown-item" href="/edit_myProfile" class="w3-button ">Edit Profile</a>
+                                <a class="dropdown-item" href="/accounts/password_change" class="w3-button ">Change password</a>
+                                <a class="dropdown-item" href="/LogOut" class="w3-button ">Logout</a>
+                                
+
+                            </div>
+                        </li>
+                    {% else %}
+
+                        <li class="nav-item">
+                            <a href="/Login" class="nav-link " >Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="/signup" class="nav-link" >SignUp</a>
+                        </li>
+
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="banner">
+        <div class="container">
+            <div class="banner-text">
+                <div class="banner-heading">
+                    Glad to see you here !
+                </div>
+                <div class="banner-sub-heading">
+                    Here goes the secondary heading on hero banner
+                </div>
+                <button type="button" class="btn btn-warning text-dark btn-banner">Get started</button>
+            </div>
+        </div>
+    </div>
+
+
+  <script>
+      $(document).on("scroll", function(){
+    if
+      ($(document).scrollTop() > 86){
+      $("#banner").addClass("shrink");
+    }
+    else
+    {
+      $("#banner").removeClass("shrink");
+    }
+  });
+  </script>
+
+    <!-- NavBar End-->
+
+
+    <div class="container" >
+        {% block content %}
+
+        {% endblock %}
+    </div>
+
+    {% block javascript %}
+
+
+    {% endblock %}
+
+    <script>
+        if ( window.history.replaceState ) {
+          window.history.replaceState( null, null, window.location.href );
+        }
+    </script>
+<!-- This script is used for stop resubmmision of Django form if we refresh page -->
+
+
+</body>
+</html>

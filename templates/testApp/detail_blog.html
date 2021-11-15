@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+{% extends 'testApp/base.html' %}
+
+{% block title %}{{post.title}} {% endblock %}
+
+    {% block content %}
+        <div>
+            <h1>{{post.title}}</h1><hr>
+            <p id="pdate"> published on {{post.publish}} by {{post.author | title}} </p>
+            <p>{{post.body|linebreaks}}</p> </br></br>
+        </div>
+        <hr>
+        <div class="d-flex flex-row" style="float: left; width: 40%; padding-left: 20px;">
+            <form method="POST" action="{% url 'like' post.pk %}" class="like_form" id="{{post.pk}}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" style="border: none; background-color: transparent;">
+                    <i class="fa fa-thumbs-o-up" style="font-size: 23px;" id="color_like">
+                    <span class="like_count" style="color: black;">{{post.likes.all.count}}</span></i>
+                </button>
+            </form>
+            <form method="POST" action="{% url 'dislike' post.pk %}" class="dislike_form" id="{{post.pk}}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" style="border: none; background-color: transparent;">
+                    <i class="fa fa-thumbs-o-down" style="font-size: 23px;"  id="color_dislike">
+                    <span class="dislike_count" style="color: black;">{{post.dislikes.all.count}}</span></i>
+                </button>
+            </form>
+        </div> <br><br>
+        <hr>
+        {% if csubmit %}
+            <h4 style="color: green; text-align: center;">Your comment on {{post.title}}</h4>
+        {% elif rsubmit %}
+            <h4 style="color: green; text-align: center;">Your reply submited</h4>
+        {% endif %}
+
+        <div class="comment_form">
+            <h4>Comment Here :</h4>
+            <form method="POST">
+                {% csrf_token %}
+                {{form.as_p}}
+                <input type="hidden" name="post_id" value="{{post.id}}">
+                <input type="hidden" name="comment_id" value="">
+
+                {% if user.is_authenticated %}
+                    <input type="submit" class="btn mybtn" value="Submit Comment">
+                {% endif %}
+            </form>
+        </div><hr>
+
+        <div class="comment">
+            {% with comments.count as comments_count%}
+                {% if comments_count < 1 %}
+                  <h3 id="comment_count" style="float: left; margin-right: 5px;" >{{comments_count}}</h3> <h3> <span>  Comment..</span> </h3>
+                {% else %}
+                    <h3 id="comment_count" style="float: left; margin-right: 5px; " >{{comments_count}}</h3> <h3> <span>  Comments..</span> </h3>
+                {% endif %}
+            {% endwith %}
+            <br>
+            {% if not comments %}
+                <p> No Comments Yet...</p>
+            {% else %}
+                {% for cmt in comments %}
+                    <div class="show_commet" id="commentDiv{{cmt.id}}">
+                        <div class="flex">
+                            <div  class="profile_comment">
+                                <img  src="{{cmt.Name.profile.profile_pic.url}}" alt="user">
+                            </div>
+                            <div class="info_comment">
+                                <strong class="c_name" id="c_name{{cmt.id}}">{{cmt.Name | title}}</strong>
+                                <strong class="date" id="date{{cmt.id}}"> <span class="dot">·</span> {{cmt.created}}</strong>
+                                <span class="body_commnt" id="body_commnt{{cmt.id}}">{{cmt.body|safe|truncatewords:"30"|linebreaks}}</span>
+                            </div>
+                            <div class="dropdown">
+                                <!-- three dots -->
+                                <ul class="dropbtn icons"  data-target-div="myDropdown{{cmt.id}}">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                </ul>
+                                <!-- menu -->
+                                <div id="myDropdown{{cmt.id}}" class="dropdownContent" >
+                                    {% if user == cmt.Name %}
+                                        <button type="button" class="ButtonED" data-bs-toggle="modal" data-bs-target="#forEditComment{{cmt.id}}">
+                                          <img src="/static/image/pen-solid.svg" alt=""> <span style="float:left;">Edit</span>
+                                        </button>
+                                        <button type="button" class="ButtonED" data-bs-toggle="modal" data-bs-target="#forDeleteComment{{cmt.id}}">
+                                          <img src="/static/image/trash-solid.svg" alt=""> <span style="float:left;">Delete</span>
+                                        </button>
+                                    {% else %}
+                                        <button type="button" class="ButtonED" style="padding-top: 8px;" >
+                                          <img src="/static/image/flag-solid.svg" alt=""> Report
+                                        </button>
+                                    {% endif %}
+                                          <!-- start Modal for Delete -->
+                                        <div class="modal fade" id="forDeleteComment{{cmt.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                            <div class="modal-dialog deletemodal">
+                                              <div class="modal-content">
+                                                <div class="modal-header">
+                                                  <h5 class="modal-title" id="exampleModalLabel">Delete comment</h5>
+                                                </div>
+                                                <div class="modal-body">
+                                                  Delete your comment permanently ?
+                                                </div>
+                                                <div class="modal-footer">
+                                                  <button type="button"  style="width:100px;" data-bs-dismiss="modal">Cancel</button>
+                                                  <form method="POST" action="{% url 'delete' cmt.id %}" class="delete_comment"  value={{cmt.id}}>
+                                                          {% csrf_token %}
+                                                          <input type="hidden" name="next" value="{{ request.path }}">
+                                                          <button type="submit" class="confirm_delete" data-bs-dismiss="modal">
+                                                            Delete
+                                                          </button>
+                                                  </form>
+                                                </div>
+                                              </div>
+                                            </div>
+                                        </div>
+                                        <!-- End Modal for Delete -->
+
+                                        <!-- start Modal for Edit -->
+                                        <div class="modal fade" id="forEditComment{{cmt.id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                          <div class="modal-dialog Edit_modal_Comment">
+                                            <div class="modal-content">
+
+                                              <div class="modal-body">
+
+                                                <form method="POST" action="{% url 'updateComment' cmt.id %}" class="Edit_comment" value={{cmt.id}}>
+                                                  {% csrf_token %}
+                                                        <textarea class="textareaEdit" name="body" rows="8" cols="80" style="width: 100%; height: 85px;">{{cmt.body}}</textarea>
+                                                        <input type="hidden" name="next" value="{{ request.path }}">
+                                                        <button type="submit" style="" class="Editbtn" data-bs-dismiss="modal">
+                                                          Submit
+                                                        </button>
+                                                </form>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      <!-- End Modal for Delete -->
+
+
+                                </div>
+                            </div>
+                          </div>
+
+                          <div class="icon_box">
+                            <form method="POST" action="{% url 'likes_comment' cmt.pk %}" class="likeComment" id="comment{{cmt.pk}}" value={{cmt.pk}} style="float: left;">
+                              {% csrf_token %}
+                              <input type="hidden" name="next" value="{{ request.path }}">
+                              <button type="submit" style="border: none; background-color: transparent;">
+                                  <i class="fa fa-heart" id="commentLike_color{{cmt.pk}}" > </i>
+                                  <span style="margin-left: 20px" id="commentLike_count{{cmt.pk}}">{{cmt.likes_comment.all.count}}</span> <span style="font-family: italic;">likes</span>
+                              </button>
+                            </form>
+                            <a class="reply_btn " data-bs-toggle="collapse" href="#collapseExample{{cmt.id}}" role="button" aria-expanded="false" aria-controls="collapseExample">
+                              Reply
+                            </a>
+                          </div>
+                        {% if user.is_authenticated %}
+                            {% for like in cmt.likes_comment.all %}
+                               {% if like == request.user %}
+                                   <style>
+                                       #commentLike_color{{cmt.pk}} {color: red;}
+                                   </style>
+                               {% endif %}
+                             {% endfor %}
+
+                          {% endif %}
+
+                        <div class="collapse" id="collapseExample{{cmt.id}}">
+                            <div class="card card-body">
+                                <form method="POST">
+                                    {% csrf_token %}
+                                    {{form.as_p}}
+                                    <input type="hidden" name="comment_id" value="{{cmt.id}}">
+                                    <input type="hidden" name="post_id" value="{{post.id}}">
+                                    {% if user.is_authenticated %}
+                                        <a class="Cancel " data-bs-toggle="collapse" href="#collapseExample{{cmt.id}}" >CANCEL</a>
+                                        <input type="submit" class=" mybtn" value="REPLY">
+                                    {% endif %}
+                                </form>
+                            </div>
+                        </div>
+                        {% if cmt.replies.count > 0 %}
+                        <div class="reply_box" >
+                            <a class="show_reply_btn" style="cursor: pointer;" id="rp{{cmt.id}}" onclick="toggleText(this.id, 'more{{cmt.id}}');">
+                                <i class='fa fa-angle-down'></i>View reply
+                            </a>
+                        </div>
+                        {% endif %}
+                        {% load most_comment %}
+                        <div class="replies" id="more{{cmt.id}}" style="display: none;">
+                            {% for reply in replyDict|get_val:cmt.id %}
+                                <div class="flex card1">
+                                    <div  class="profile_comment" >
+                                        <img  src="{{reply.Name.profile.profile_pic.url}}" alt="user">
+
+                                    </div>
+                                    <div class="info_comment">
+                                        <strong class="c_name" >{{reply.Name | title}}</strong>
+                                        <strong class="date"> <span class="dot">·</span> {{reply.created}}</strong>
+                                        <span class="body_commnt">{{reply.body}}</span>
+                                      </div>
+                                </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+        </div>
+{% endblock %}
+
+{% block javascript %}
+
+        <!-- This script is used for show delete and Edit comment Button -->
+        <script type="text/javascript">
+            $('.dropbtn').click(function(event){
+                $('.dropdownContent').hide();
+                $('#'+$(this).data('target-div')).show();
+                event.stopPropagation();
+            });
+            $(document).on('click', function (event) {
+                    $(".dropdownContent").hide();
+                    event.stopPropagation();
+
+              });
+              $('.dropbtn, .dropdownContent').on('click', function(event){
+                    event.stopPropagation();
+                });
+        </script>
+
+
+        <!--  <script>
+          function showDropdown(btn_id,id) {
+                  alert(event.target.id)
+                  alert(id)
+                  alert(btn_id)
+                  document.getElementById(id).style.display = "block";
+          }
+          $(document).on('click', function (event) {
+                  alert(event.target.id)
+                  $(".dropdownContent").hide();
+
+            });
+            $('.dropbtn, .dropdownContent').on('click', function(e){
+                  e.stopPropagation();
+              });
+      </script> -->
+
+      <!-- This script is used for hide and show reply comment section -->
+      <script type="text/javascript">
+        function toggleText(btn_id, id){
+          var e = document.getElementById(id);
+          var btn = document.getElementById(btn_id);
+          if(e.style.display == 'block')
+          {
+            e.style.display = 'none';
+            btn.innerHTML = "<i class='fa fa-angle-down'></i>" + "View reply";
+          }
+          else{
+            e.style.display = 'block';
+            btn.innerHTML = "<i class='fa fa-angle-up'></i>" + "Hide reply";
+          }
+        }
+      </script>
+
+    <!-- Javascript for Like Post -->
+
+      <script>
+        $(document).ready(function(){
+          $('.like_form').submit(function(event){
+              event.preventDefault()
+
+              const post_id = $(this).attr('id')
+              const url = $(this).attr('action')
+              const likes = parseInt($(".like_count").text())
+              const dislikes = parseInt($(".dislike_count").text())
+              let new_likes;
+              let new_dislikes;
+
+              $.ajax({
+                  type: 'POST',
+                  url: url,
+                  data: {
+                      'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                      'pk': post_id ,
+                  },
+                  success: function(response) {
+                      if(response.authenticated == true){
+                          // console.log(response)
+                          if(response.like == false && response.dislike == false){
+                              new_likes = likes + 1
+                              new_dislikes = dislikes + 0
+                              $("#color_like").css("color", '#0d6efd');
+                          }
+                          else if(response.like == true && response.dislike == false){
+                              new_likes = likes -1
+                              new_dislikes = dislikes + 0
+                              $("#color_like").css("color", 'black');
+                              }
+                          else if(response.like == false && response.dislike == true){
+                              new_likes = likes + 1
+                              new_dislikes = dislikes - 1
+                              $("#color_like").css("color", '#0d6efd');
+                              $("#color_dislike").css("color", 'black');
+                          }
+                              $(".like_count").text(new_likes);
+                              $(".dislike_count").text(new_dislikes);
+                          }
+                      else if(response.authenticated == false) {
+                          alert("LogIn must be Required to Like the Post")
+                          //window.location = "/accounts/login/"
+                          // window.location.replace("/accounts/login/");
+                      }
+
+                      },
+                  error: function(response) {
+                      console.log('Error',response)
+                  }
+                })
+            })
+        })
+      </script>
+
+    <!-- Javascript for DisLike Post -->
+      <script>
+          $(document).ready(function(){
+
+                $('.dislike_form').submit(function(event){
+                    event.preventDefault()
+
+                    const post_id = $(this).attr('id')
+                    const url = $(this).attr('action')
+                    const likes = parseInt($(".like_count").text())
+                    const dislikes = parseInt($(".dislike_count").text())
+                    let new_likes;
+                    let new_dislikes;
+
+                    $.ajax({
+                        type: 'POST',
+                        url: url,
+                        data: {
+                            'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                            'pk': post_id ,
+                        },
+                        success: function(response) {
+                            if(response.authenticated == true){
+                                // console.log(response)
+                                if(response.like == false && response.dislike == false){
+                                    new_likes = likes + 0
+                                    new_dislikes = dislikes + 1
+                                    $("#color_dislike").css("color", 'red');
+                                }
+                                else if(response.like == true && response.dislike == false){
+                                    new_likes = likes -1
+                                    new_dislikes = dislikes + 1
+                                    $("#color_like").css("color", 'black');
+                                    $("#color_dislike").css("color", 'red');
+                                }
+                                else if(response.like == false && response.dislike == true){
+                                    new_likes = likes + 0
+                                    new_dislikes = dislikes - 1
+                                    $("#color_dislike").css("color", 'black');
+                                }
+                                $(".like_count").text(new_likes)
+                                $(".dislike_count").text(new_dislikes)
+
+                            }
+                            else if(response.authenticated == false) {
+
+                              alert("LogIn must be Required to DisLike the Post")
+                                // window.location.replace("/accounts/login/");
+                            }
+
+                        },
+                        error: function(response) {
+                            console.log('Error',response)
+                        }
+                    })
+                })
+            })
+        </script>
+<!-- javascript for Like comment-->
+        <script type="text/javascript">
+          $(document).ready(function(){
+            $('.likeComment').submit(function(event){
+                event.preventDefault()
+                const comment_id = $(this).attr('value')
+                const url = $(this).attr('action')
+                const likes = parseInt($(`#commentLike_count${comment_id}`).text())
+                let new_likes;
+                $.ajax({
+                    url: url,
+                    data: {
+                      'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                      'pk': comment_id ,
+                    },
+                    success: function(response) {
+                        console.log(response)
+                        if(response.authenticated == true){
+                            if(response.like == false){
+                                new_likes = likes + 1
+                                $(`#commentLike_color${comment_id}`).css("color", 'red');
+                            }
+                            else if(response.like == true ){
+                                new_likes = likes -1
+                                $(`#commentLike_color${comment_id}`).css("color", 'rgb(65, 76, 85)');
+                            }
+
+                            $(`#commentLike_count${comment_id}`).text(new_likes);
+                        }
+                        else if(response.authenticated == false) {
+                            alert("LogIn must be Required to Like the Post")
+                        }
+
+                        },
+                    error: function(response) {
+                        console.log('Error',response)
+                          alert('ok')
+                    }
+                })
+            })
+          })
+        </script>
+
+<!-- end for Like comment-->
+
+<!-- javascript for Delete comment-->
+      <script>
+          $(document).ready(function(){
+              $('.delete_comment').submit(function(event){
+                  event.preventDefault()
+
+                  const total_comment = parseInt($("#comment_count").text())
+                  const comment_id = $(this).attr('value')
+                  const url = $(this).attr('action')
+                  let new_total_comment
+                  $.ajax({
+                      type: 'POST',
+                      url: url,
+                      data: {
+                          'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                          'id': comment_id ,
+                      },
+                      success: function(response) {
+                        $(`#commentDiv${comment_id}`).fadeOut();
+                        new_total_comment = total_comment -1
+                        $("#comment_count").text(new_total_comment)
+                      },
+                      error: function(response) {
+                          alert(response)
+                      }
+                  })
+              })
+          })
+      </script>
+      <!-- End for Delete comment-->
+
+
+      <!-- javascript for Edit comment-->
+
+      <script>
+          $(document).ready(function(){
+              $('.Edit_comment').submit(function(event){
+                  event.preventDefault()
+
+                  const comment_id = $(this).attr('value')
+                  const url = $(this).attr('action')
+                  var serializedData = $(this).serialize();
+                  $.ajax({
+                      type: 'POST',
+                      url: url,
+                      data: serializedData,
+                      dataType: 'json',
+                      success: function(response) {
+                        output = response.body_com
+                        $(`#body_commnt${comment_id}`).text(output).append('<br><br>')
+
+                        /* location.reload(); */ /* it reload the same page */
+                      },
+                      error: function(response) {
+                          alert('Error',response)
+                      }
+                  })
+              })
+          })
+      </script>
+<!-- End of Edit comment-->
+
+{% endblock %}

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+
+{% extends 'testApp/base.html' %}
+
+    {% block content %}
+
+    <div class="flex">
+        <div  class="profile_comment">
+            <img  src="{{user.profile.profile_pic.url}}" alt="user">
+        </div>
+        <div class="info_comment">
+            <strong>{{user.username}}</strong><br><br>
+            <p>{{user.profile.bio}}</p>
+        </div>
+    </div>
+    
+
+    {% endblock %}

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+{% extends 'testApp/base.html' %}
+    {% block title %} Update Comment{% endblock %}
+    {% block content %}
+    <br>
+    <h1>Edit Your comment</h1><hr>
+    <form method="POST">
+        
+        body : <input type="text" name="body" value="{{com.body}}"><br><br>
+        {% csrf_token %}
+        <br><input class="btn" type="submit" value="Update record">
+    </form>
+
+    {% endblock %}
